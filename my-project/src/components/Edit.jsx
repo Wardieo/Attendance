@@ -16,7 +16,7 @@ const Edit = () => {
     })
 
     useEffect(() => {
-        Axios.get('http://localhost:3001/submit/'+id)
+        Axios.get('http://127.0.0.1:5000/submit/'+id)
         .then(res => setValue({...value, usn: res.data[0].student_info_id, name:res.data[0].name, course: res.data[0].course, year: res.data[0].year, department: res.data[0].department}))
         .catch(err => console.log(err))
     }, [])
@@ -24,7 +24,7 @@ const Edit = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        Axios.put('http://localhost:3001/edit/'+id, value)
+        Axios.put('http://127.0.0.1:5000/edit/'+id, value)
         .then(res => {
             console.log(res)
             navigate('/home')

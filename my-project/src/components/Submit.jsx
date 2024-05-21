@@ -11,10 +11,21 @@ const Submit = () => {
     const {id} = useParams();
 
     useEffect(() => {
-        Axios.get('http://localhost:3001/submit/'+id)
-        .then(resp => setData(resp.data ))
-        .catch(err => console.log(err));
-    })
+      Axios.get('http://127.0.0.1:5000/submit/' + id)
+          .then(resp => {
+              if (resp.data) {
+                  if (Array.isArray(resp.data)) {
+                      setData(resp.data);
+                  } else {
+                      setData([resp.data]); // Wrap non-array data in an array
+                  }
+              } else {
+                  console.log("Response data is null.");
+              }
+          })
+          .catch(err => console.log(err));
+    }, [id]);
+  
 
     
     
@@ -68,6 +79,7 @@ const Submit = () => {
                     <button className='w-6'><Link to='/timein'><img src={cancel} alt="back" /></Link></button>
                 </div>
                 {data.map((each, index) => {
+                    if (!each) return null; // Skip null elements
                     return(
                     <div className='flex flex-col gap-5 pt-10'>
                         <ul key={index} className='text-xl flex flex-col gap-6'>

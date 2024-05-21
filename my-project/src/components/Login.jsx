@@ -13,7 +13,7 @@ const Login = () => {
     Axios.defaults.withCredentials = true;
     const handleSubmit = (e) => {
         e.preventDefault();
-        Axios.post('http://localhost:3001/login', value)
+        Axios.post('http://127.0.0.1:5000/login', value)
         .then(res => {
             if(res.data.Status === "Success") {
                 navigate('/home')
@@ -24,7 +24,7 @@ const Login = () => {
         .catch(err => console.log(err))
     }
 
-  return (
+    return (
     <div style={{'background-image': `url(${bg})`}} className=' w-full flex flex-col items-center justify-center h-screen bg-no-repeat bg-center bg-cover'>
         <div className='bg-white p-4 rounded-lg shadow-xl'>
             <h2 className='border-b-2 text-2xl font-bold py-4'>Login</h2>
@@ -43,7 +43,7 @@ const Login = () => {
             </form>
         </div>
     </div>
-  )
+    )
 }
 
 export default Login

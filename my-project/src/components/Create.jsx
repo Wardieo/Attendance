@@ -11,7 +11,7 @@ const Create = () => {
     const [department, setDepartment] = useState('')
 
     const onSubmit = () => {
-        Axios.post('http://localhost:3001/add', {
+        Axios.post('http://127.0.0.1:5000/add', {
             student_info_id: student_info_id,
             name: name,
             year: year,
