@@ -21,6 +21,7 @@ const Timeout = () => {
               <div className='mt-10 flex flex-col gap-7 text-white'>
                 <div className='flex items-center gap-'>
                   <div className='flex gap-4 text-[#D0D0D0] text-[10px] items-center'>
+                    <Link to='/login'>Login</Link>
                     <Link to="/timein"><button className='hover:border-b-[1px] border-[#DFD46F] items-center duration-100'>Time in </button></Link>
                     <p>|</p>
                     <button className='bg-[#4A4A4A] px-3 py-1 rounded-sm'>Attendance</button>
