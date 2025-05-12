@@ -20,6 +20,7 @@ const db = mysql.createConnection({
   password: "",
   host: "localhost",
   database: "db_attendance",
+  multipleStatements: true,
 });
 
 //GET /student
@@ -49,7 +50,19 @@ app.get("/attendance", (req, res) => {
 
 //GET /total_students
 app.get("/total_students", (req, res) => {
-  const sql = "SELECT COUNT(name) FROM student_info";
+  const sql = "SELECT COUNT(student_info_id) FROM student_info";
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.json(result);
+    }
+  });
+});
+
+//GET /total_attendance
+app.get("/total_attendance", (req, res) => {
+  const sql = "SELECT COUNT(timein_id) FROM timein";
   db.query(sql, (err, result) => {
     if (err) {
       console.log(err);
@@ -126,10 +139,12 @@ app.post("/add", (req, res) => {
   const year = req.body.year;
   const course = req.body.course;
   const department = req.body.department;
+  const attendance = req.body.attendance;
+  const quizes = req.body.quizes;
 
   db.query(
-    "INSERT INTO student_info (student_info_id, name, year, course, department) VALUES (?, ?, ?, ?, ?)",
-    [student_info_id, name, year, course, department],
+    "INSERT INTO student_info (student_info_id, name, year, course, department, attendance, quizes) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    [student_info_id, name, year, course, department, attendance, quizes],
     (err, result) => {
       if (err) {
         console.log(err);
@@ -149,18 +164,51 @@ app.post("/create", (req, res) => {
     .slice(0, 19)
     .replace("T", " ");
 
+  const sql = `
+    INSERT INTO timein (student_info_id, transaction, date)
+    VALUES (?, ?, ?);
+    
+    UPDATE student_info
+    SET attendance = COALESCE(attendance, 0) + 1
+    WHERE student_info_id = ?;
+  `;
+
   db.query(
-    "INSERT INTO timein (student_info_id, transaction, date) VALUES (?,?,?)",
-    [student_info_id, transaction, date],
+    sql,
+    [student_info_id, transaction, date, student_info_id],
     (err, result) => {
       if (err) {
         console.error(err);
-        res.status(500).send("Error inserting data");
-      } else {
-        res.send(result);
+        return res.status(500).send("Error executing queries");
       }
+
+      res.send({ message: "Insert and update successful", result });
     }
   );
+});
+
+//GET Top 1 attendance
+app.get("/top_attendance", (req, res) => {
+  const sql = "SELECT * FROM student_info ORDER BY attendance DESC LIMIT 1;";
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.json(result);
+    }
+  });
+});
+
+//GET Top 3 attendance
+app.get("/top3_attendance", (req, res) => {
+  const sql = "SELECT * FROM student_info ORDER BY attendance DESC LIMIT 3;";
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.json(result);
+    }
+  });
 });
 
 //POST /login

@@ -17,7 +17,7 @@ const Login = () => {
     Axios.post("http://localhost:3001/login", value)
       .then((res) => {
         if (res.data.Status === "Success") {
-          navigate("/");
+          navigate("/admin");
         } else {
           alert(res.data.Message);
         }
@@ -35,7 +35,7 @@ const Login = () => {
           <h2 className="text-2xl font-bold">Login</h2>
           <Link
             to={"/"}
-            className="text-[8px] font-thin bg-green-600 text-white px-2 py-1 rounded-sm shadow-lg hover:scale-95 duration-200"
+            className="text-[8px] font-thin bg-[#4B83D7] text-white px-2 py-1 rounded-sm shadow-lg hover:scale-95 duration-200"
           >
             Attendance
           </Link>
@@ -68,7 +68,7 @@ const Login = () => {
             />
           </div>
           <div className="w-10 mt-4">
-            <button className="bg-green-600 px-3 py-1 rounded-md text-white">
+            <button className="bg-[#4B83D7] px-3 py-1 rounded-md text-white">
               Login
             </button>
           </div>

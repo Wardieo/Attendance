@@ -8,35 +8,69 @@ import { CiCirclePlus } from "react-icons/ci";
 import { IoArrowForwardSharp } from "react-icons/io5";
 import { FaTrophy } from "react-icons/fa";
 import { GiTrophyCup } from "react-icons/gi";
-import { Line } from "react-chartjs-2";
-import { IoSearch } from "react-icons/io5";
 import Axios from "axios";
+import { GrFormNext } from "react-icons/gr";
+import { GrFormPrevious } from "react-icons/gr";
+
 const Overview = () => {
-  const [student, setStudent] = useState([]);
-  const [search, setSearch] = useState("");
   const [total_students, setTotal_students] = useState(0);
+  const [total_attendance, setTotal_attendance] = useState(0);
+  const [topAttendance, setTopAttendance] = useState("");
+  const [top3Attendance, setTop3Attendance] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [auth, setAuth] = useState(false);
+  const [message, setMessage] = useState("");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentAttendance = attendance.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(attendance.length / itemsPerPage);
 
   useEffect(() => {
-    Axios.get("http://localhost:3001/student")
-      .then((response) => setStudent(response.data))
+    Axios.get("http://localhost:3001/attendance")
+      .then((resp) => setAttendance(resp.data))
       .catch((err) => console.log(err));
   }, []);
 
   useEffect(() => {
-    Axios.get("http://localhost:3000/total_students")
+    Axios.get("http://localhost:3001/").then((res) => {
+      if (res.data.Status === "Success") {
+        setAuth(true);
+      } else {
+        setAuth(false);
+        setMessage(res.data.Message);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    Axios.get("http://localhost:3001/total_students")
       .then((response) => setTotal_students(response.data))
       .catch((err) => console.log(err));
-  });
-  const handleDelete = (id) => {
-    Axios.delete("http://localhost:3001/delete/" + id)
-      .then((res) => {
-        console.log(res);
-        window.location.reload();
-      })
-      .catch((err) => console.log(err));
-  };
+  }, []);
 
-  return (
+  useEffect(() => {
+    Axios.get("http://localhost:3001/total_attendance")
+      .then((response) => setTotal_attendance(response.data))
+      .catch((err) => console.log(err));
+  }, []);
+
+  useEffect(() => {
+    Axios.get("http://localhost:3001/top_attendance")
+      .then((response) => setTopAttendance(response.data))
+      .catch((err) => console.log(err));
+  }, []);
+
+  useEffect(() => {
+    Axios.get("http://localhost:3001/top3_attendance")
+      .then((response) => setTop3Attendance(response.data))
+      .catch((err) => console.log(err));
+  }, []);
+
+  return auth ? (
     <div className="w-full">
       <div className="flex justify-between items-center">
         <div className="flex flex-col">
@@ -47,10 +81,10 @@ const Overview = () => {
         </div>
         <div className="flex gap-5">
           <button className="text-[11px] border border-gray-300 rounded-md p-2 shadow-md">
-            <Link to="/quiz">+ Create Quiz</Link>
+            <Link to="/admin/quiz">+ Create Quiz</Link>
           </button>
           <button className="text-[11px] bg-[#4B83D7] text-white rounded-md p-2 shadow-md">
-            <Link to="/students">+ Add Student</Link>
+            <Link to="/admin/students">+ Add Student</Link>
           </button>
         </div>
       </div>
@@ -62,7 +96,10 @@ const Overview = () => {
               <div className="flex items-center justify-between w-full">
                 <div>
                   <p className="text-sm text-gray-600">Total Students</p>
-                  <h1 className="text-xl font-semibold">{total_students}</h1>
+                  <h1 className="text-xl font-semibold">
+                    {total_students?.[0]?.["COUNT(student_info_id)"] ??
+                      "Loading..."}
+                  </h1>
                 </div>
                 <div className="bg-gray-50 px-2 py-1 border border-gray-100 rounded-md flex items-center gap-2">
                   <CiCirclePlus className="text-[13px] font-bold text-green-500" />
@@ -81,8 +118,11 @@ const Overview = () => {
               <FaUserPen className="border border-gray-300 w-10 h-10 p-2 rounded-lg shadow-md bg-gray-100" />
               <div className="flex items-center justify-between w-full">
                 <div>
-                  <p className="text-sm text-gray-600">Today Attendance</p>
-                  <h1 className="text-xl font-semibold">30</h1>
+                  <p className="text-sm text-gray-600">Total Attendance</p>
+                  <h1 className="text-xl font-semibold">
+                    {total_attendance?.[0]?.["COUNT(timein_id)"] ??
+                      "Loading..."}
+                  </h1>
                 </div>
                 <div className="bg-gray-50 px-2 py-1 border border-gray-100 rounded-md flex items-center gap-2">
                   <CiCirclePlus className="text-[13px] font-bold text-green-500" />
@@ -103,7 +143,9 @@ const Overview = () => {
                 <p className="text-sm text-gray-600">
                   #1 in Student Attendance
                 </p>
-                <h1 className="text-xl font-semibold">Edward Mosquera</h1>
+                <h1 className="text-xl font-semibold">
+                  {topAttendance?.[0]?.["name"] ?? "Loading..."}
+                </h1>
               </div>
               <div>
                 <GiTrophyCup className="text-yellow-400 text-4xl" />
@@ -126,9 +168,59 @@ const Overview = () => {
       </div>
       <div className="flex gap-6 w-full">
         <div className=" w-full border p-5 rounded-xl shadow-md">
-          <h1>Overview</h1>
+          <h1 className="font-bold">Attendance List</h1>
+          <div className="">
+            <table className="w-full mt-5">
+              <thead className="text-gray-700 border-b-2 ">
+                <tr className="mt-5">
+                  <th>Name</th>
+                  <th>Course</th>
+                  <th>Year</th>
+                  <th>Purpose</th>
+                  <th>Time-in</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentAttendance.map((student, index) => (
+                  <tr key={index} className="bg-gray-100 border-b-2">
+                    <td className="text-sm py-5 text-center ">
+                      {student.name}
+                    </td>
+                    <td className="text-sm py-5 text-center">
+                      {student.course}
+                    </td>
+                    <td className="text-sm py-5 text-center">{student.year}</td>
+                    <td className="text-sm py-5 text-center">
+                      {student.transaction}
+                    </td>
+                    <td className="text-sm py-5 text-center">{student.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {/* Pagination Controls */}
+            <div className="flex justify-center mt-4 gap-3">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded-md disabled:opacity-50"
+              >
+                <GrFormPrevious />
+              </button>
+              <span className="px-3 py-1 text-sm">{`Page ${currentPage} of ${totalPages}`}</span>
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded-md disabled:opacity-50"
+              >
+                <GrFormNext />
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="w-full">
+        <div className="w-[60%]">
           <div className="flex flex-col justify-between gap-3">
             <div className="border border-gray-300 px-5 py-3 rounded-xl w-full shadow-md">
               <h1 className="font-semibold text-lg">Attendance Top 3 list</h1>
@@ -137,9 +229,9 @@ const Overview = () => {
                   <div className="flex items-center gap-2">
                     <GiTrophyCup className="text-2xl text-yellow-400" />
                     <div>
-                      <p>Edward Mosquera</p>
+                      <p>{top3Attendance?.[0]?.["name"] ?? "Loading..."}</p>
                       <p className="text-sm text-gray-500 font-semibold">
-                        BSCS
+                        {top3Attendance?.[0]?.["course"] ?? "Loading..."}
                       </p>
                     </div>
                   </div>
@@ -147,16 +239,18 @@ const Overview = () => {
                     <p className="text-gray-500 font-semibold">
                       Total Attendance
                     </p>
-                    <p className="text-sm">213</p>
+                    <p className="text-sm">
+                      {top3Attendance?.[0]?.["attendance"] ?? "Loading..."}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <FaTrophy className="text-2xl text-gray-400" />
                     <div>
-                      <p>Vincent Mosquera</p>
+                      <p>{top3Attendance?.[1]?.["name"] ?? "Loading..."}</p>
                       <p className="text-sm text-gray-500 font-semibold">
-                        BSCS
+                        {top3Attendance?.[1]?.["course"] ?? "Loading..."}
                       </p>
                     </div>
                   </div>
@@ -164,16 +258,18 @@ const Overview = () => {
                     <p className="text-gray-500 font-semibold">
                       Total Attendance
                     </p>
-                    <p className="text-sm">201</p>
+                    <p className="text-sm">
+                      {top3Attendance?.[1]?.["attendance"] ?? "Loading..."}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <FaTrophy className="text-2xl text-amber-800" />
                     <div>
-                      <p>Edvin Mosquera</p>
+                      <p>{top3Attendance?.[2]?.["name"] ?? "Loading..."}</p>
                       <p className="text-sm text-gray-500 font-semibold">
-                        BSCS
+                        {top3Attendance?.[2]?.["course"] ?? "Loading..."}
                       </p>
                     </div>
                   </div>
@@ -181,7 +277,9 @@ const Overview = () => {
                     <p className="text-gray-500 font-semibold">
                       Total Attendance
                     </p>
-                    <p className="text-sm">102</p>
+                    <p className="text-sm">
+                      {top3Attendance?.[2]?.["attendance"] ?? "Loading..."}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -239,41 +337,21 @@ const Overview = () => {
           </div>
         </div>
       </div>
-      <div className="my-6 w-full border border-gray-300 shadow-md rounded-lg">
-        <div className="p-5">
-          <h1>Student List</h1>
-          <div className="flex items-center justify-between mx-auto my-8">
-            <div className="flex items-center gap-3">
-              <IoSearch />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="border-gray-200"
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-4">
-              <button className="border text-sm border-gray-300 px-3 py-1 rounded-md bg-slate-50">
-                Filter
-              </button>
-              <button className="border text-sm border-gray-300 px-3 py-1 rounded-md bg-slate-50">
-                All Course
-              </button>
-            </div>
-          </div>
-          <table className="w-full">
-            <thead className="border-b-2 bg-black w-full">
-              <tr className="flex justify-between">
-                <th className="px-2">Usn</th>
-                <th className="px-2">Name</th>
-                <th className="px-2">Course</th>
-                <th className="px-2">Year</th>
-                <th className="px-2">Department</th>
-              </tr>
-            </thead>
-          </table>
-        </div>
+    </div>
+  ) : (
+    <div className="bg-white p-4 rounded-lg">
+      <h2 className="border-b-2 text-2xl font-bold py-4">
+        You are not yet logged in
+      </h2>
+      <div className="w-10 mt-4">
+        <Link
+          to="/login"
+          className="bg-[#4B83D7] px-3 py-1 rounded-md text-white"
+        >
+          Login
+        </Link>
       </div>
+      <p className="text-red-500 text-sm mt-2">{message}</p>
     </div>
   );
 };
